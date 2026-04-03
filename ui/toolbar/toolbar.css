@@ -1,0 +1,47 @@
+.agt-toolbar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: var(--agt-space-xs);
+  padding: var(--agt-space-sm);
+  background: rgba(26, 26, 46, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--agt-radius-lg);
+  box-shadow: var(--agt-shadow-lg);
+  font-family: var(--agt-font-family);
+}
+
+.agt-toolbar-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--agt-text-secondary);
+  border-radius: var(--agt-radius-md);
+  cursor: pointer;
+  transition: background var(--agt-transition), color var(--agt-transition);
+  padding: 0;
+}
+
+.agt-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--agt-text-primary);
+}
+
+.agt-toolbar-btn[aria-pressed="true"] {
+  background: var(--agt-accent-muted);
+  color: var(--agt-accent);
+  box-shadow: 0 0 0 1px var(--agt-accent);
+}
+
+.agt-toolbar-btn:focus-visible {
+  outline: 2px solid var(--agt-accent);
+  outline-offset: 2px;
+}

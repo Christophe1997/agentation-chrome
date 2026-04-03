@@ -1,0 +1,40 @@
+:root {
+  --agt-bg-primary: #1a1a2e;
+  --agt-bg-secondary: #16213e;
+  --agt-bg-surface: #0f3460;
+  --agt-accent: #e94560;
+  --agt-accent-hover: #ff6b81;
+  --agt-accent-muted: rgba(233, 69, 96, 0.15);
+  --agt-text-primary: #eaeaea;
+  --agt-text-secondary: #8892a4;
+  --agt-text-muted: #555e6e;
+  --agt-success: #2ed573;
+  --agt-warning: #ffa502;
+  --agt-error: #ff4757;
+  --agt-info: #70a1ff;
+  --agt-space-xs: 4px;
+  --agt-space-sm: 8px;
+  --agt-space-md: 12px;
+  --agt-space-lg: 16px;
+  --agt-space-xl: 24px;
+  --agt-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --agt-font-size-xs: 11px;
+  --agt-font-size-sm: 12px;
+  --agt-font-size-md: 13px;
+  --agt-font-size-lg: 14px;
+  --agt-radius-sm: 4px;
+  --agt-radius-md: 6px;
+  --agt-radius-lg: 8px;
+  --agt-radius-full: 9999px;
+  --agt-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --agt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --agt-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --agt-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
