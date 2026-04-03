@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const { store, mockAnnotations, mockSyncStatus, mockSessions, mockSettings, mockRetryQueue } =
   vi.hoisted(() => {
@@ -43,8 +43,15 @@ import {
   clearAnnotations,
   getSyncStatus,
   setSyncStatus,
+  getSession,
+  saveSession,
+  removeSession,
+  loadSettings,
+  saveSettings,
   enqueueRetry,
   dequeueRetry,
+  requeueRetry,
+  removeFromRetryQueue,
   runExpiryCleanup,
 } from '../storage';
 import type { Annotation, RetryEntry } from '../types';
@@ -76,6 +83,11 @@ function makeRetryEntry(annotationId: string, nextRetryAt = 0): RetryEntry {
 beforeEach(() => {
   for (const key of Object.keys(store)) delete store[key];
   vi.clearAllMocks();
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('loadAnnotations', () => {
@@ -137,7 +149,7 @@ describe('clearAnnotations', () => {
     store['local:annotations'] = { '1-https://example.com': [makeAnnotation('ann-1')] };
     await clearAnnotations(1, 'https://example.com');
     const saved = store['local:annotations'] as Record<string, unknown>;
-    expect('1-https://example.com' in saved).toBe(false);
+    expect(saved).toEqual({});
   });
 });
 
@@ -163,8 +175,10 @@ describe('enqueueRetry / dequeueRetry', () => {
   });
 
   it('dequeues entries where nextRetryAt <= now', async () => {
-    const due = makeRetryEntry('ann-1', Date.now() - 1000);
-    const notYet = makeRetryEntry('ann-2', Date.now() + 60000);
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
+    const now = Date.now();
+    const due = makeRetryEntry('ann-1', now - 1000);
+    const notYet = makeRetryEntry('ann-2', now + 60000);
     store['local:retryQueue'] = [due, notYet];
     const result = await dequeueRetry();
     expect(result).toHaveLength(1);
@@ -172,6 +186,11 @@ describe('enqueueRetry / dequeueRetry', () => {
     const remaining = store['local:retryQueue'] as RetryEntry[];
     expect(remaining).toHaveLength(1);
     expect(remaining[0].annotationId).toBe('ann-2');
+  });
+
+  it('returns empty array when queue is empty', async () => {
+    const result = await dequeueRetry();
+    expect(result).toEqual([]);
   });
 });
 
@@ -187,5 +206,72 @@ describe('runExpiryCleanup', () => {
     const saved = store['local:annotations'] as Record<string, unknown>;
     expect('tab1-url1' in saved).toBe(false);
     expect('tab2-url2' in saved).toBe(true);
+  });
+});
+
+describe('getSession / saveSession / removeSession', () => {
+  it('returns undefined for unknown tab', async () => {
+    const result = await getSession(42);
+    expect(result).toBeUndefined();
+  });
+
+  it('returns saved session for matching tab', async () => {
+    await saveSession(1, { sessionId: 'sess-1', url: 'https://example.com' });
+    const result = await getSession(1);
+    expect(result).toEqual({ sessionId: 'sess-1', url: 'https://example.com' });
+  });
+
+  it('does not return session for different tab', async () => {
+    await saveSession(1, { sessionId: 'sess-1', url: 'https://example.com' });
+    const result = await getSession(2);
+    expect(result).toBeUndefined();
+  });
+
+  it('removes session by tabId', async () => {
+    await saveSession(1, { sessionId: 'sess-1', url: 'https://example.com' });
+    await removeSession(1);
+    const result = await getSession(1);
+    expect(result).toBeUndefined();
+  });
+});
+
+describe('loadSettings / saveSettings', () => {
+  it('returns defaults when no settings stored', async () => {
+    const result = await loadSettings();
+    expect(result).toEqual({ serverUrl: 'http://localhost:4747', detailLevel: 'standard' });
+  });
+
+  it('returns saved settings', async () => {
+    await saveSettings({ serverUrl: 'http://localhost:9999', detailLevel: 'detailed' });
+    const result = await loadSettings();
+    expect(result).toEqual({ serverUrl: 'http://localhost:9999', detailLevel: 'detailed' });
+  });
+});
+
+describe('requeueRetry / removeFromRetryQueue', () => {
+  it('requeueRetry appends an entry back to the queue', async () => {
+    const entry = makeRetryEntry('ann-1', 0);
+    await requeueRetry(entry);
+    const queue = store['local:retryQueue'] as RetryEntry[];
+    expect(queue).toHaveLength(1);
+    expect(queue[0].annotationId).toBe('ann-1');
+  });
+
+  it('removeFromRetryQueue removes matching entry by annotationId', async () => {
+    const a = makeRetryEntry('ann-1', 0);
+    const b = makeRetryEntry('ann-2', 0);
+    store['local:retryQueue'] = [a, b];
+    await removeFromRetryQueue('ann-1');
+    const queue = store['local:retryQueue'] as RetryEntry[];
+    expect(queue).toHaveLength(1);
+    expect(queue[0].annotationId).toBe('ann-2');
+  });
+
+  it('removeFromRetryQueue is a no-op for unknown annotationId', async () => {
+    const entry = makeRetryEntry('ann-1', 0);
+    store['local:retryQueue'] = [entry];
+    await removeFromRetryQueue('does-not-exist');
+    const queue = store['local:retryQueue'] as RetryEntry[];
+    expect(queue).toHaveLength(1);
   });
 });
