@@ -1,0 +1,40 @@
+.agt-marker {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(var(--agt-x), var(--agt-y)) translate(-50%, -50%);
+  will-change: transform;
+  z-index: 2147483646;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--agt-accent, #e94560);
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.agt-marker--detached {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.agt-marker[data-status="synced"]::after {
+  content: '✓';
+  color: #2ed573;
+}
+
+.agt-marker[data-status="failed"]::after {
+  content: '●';
+  color: #ff4757;
+}
+
+.agt-marker[data-status="pending"]::after {
+  content: '○';
+  color: #ffa502;
+}

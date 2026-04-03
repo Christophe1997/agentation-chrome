@@ -1,0 +1,111 @@
+import type { EventEmitter } from '../../lib/event-emitter';
+
+interface ButtonDef {
+  label: string;
+  icon: string;
+  toggle?: boolean;
+}
+
+const BUTTONS: ButtonDef[] = [
+  { label: 'Annotate', icon: annotateIcon(), toggle: true },
+  { label: 'Select Text', icon: selectTextIcon(), toggle: true },
+  { label: 'List Annotations', icon: listIcon(), toggle: true },
+  { label: 'Freeze Page', icon: freezeIcon(), toggle: true },
+  { label: 'Copy Markdown', icon: copyIcon() },
+  { label: 'Settings', icon: settingsIcon() },
+];
+
+export class Toolbar {
+  private toolbarEl: HTMLElement;
+  private annotateBtn: HTMLButtonElement;
+  private annotateMode = false;
+  private unsubscribers: Array<() => void> = [];
+
+  constructor(parent: HTMLElement, eventBus: EventEmitter) {
+    this.toolbarEl = this.buildDOM(parent);
+    this.annotateBtn = this.toolbarEl.querySelector('[aria-label="Annotate"]') as HTMLButtonElement;
+
+    this.annotateBtn.addEventListener('click', () => {
+      this.annotateMode = !this.annotateMode;
+      this.annotateBtn.setAttribute('aria-pressed', String(this.annotateMode));
+      eventBus.emit('annotate-mode', this.annotateMode);
+    });
+
+    const unsub = eventBus.on('annotate-mode', (active) => {
+      this.annotateMode = active;
+      this.annotateBtn.setAttribute('aria-pressed', String(active));
+    });
+    this.unsubscribers.push(unsub);
+  }
+
+  private buildDOM(parent: HTMLElement): HTMLElement {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'agt-toolbar';
+    toolbar.setAttribute('data-agt-ext', '');
+    toolbar.setAttribute('role', 'toolbar');
+    toolbar.setAttribute('aria-label', 'Agentation toolbar');
+
+    for (const def of BUTTONS) {
+      const btn = document.createElement('button');
+      btn.className = 'agt-toolbar-btn';
+      btn.setAttribute('aria-label', def.label);
+      if (def.toggle) btn.setAttribute('aria-pressed', 'false');
+      btn.innerHTML = def.icon;
+      toolbar.appendChild(btn);
+    }
+
+    parent.appendChild(toolbar);
+    return toolbar;
+  }
+
+  destroy(): void {
+    this.unsubscribers.forEach((fn) => fn());
+    this.toolbarEl.remove();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inline SVG icons
+// ---------------------------------------------------------------------------
+
+function annotateIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="8" cy="8" r="6"/>
+    <line x1="8" y1="5" x2="8" y2="11"/>
+    <line x1="5" y1="8" x2="11" y2="8"/>
+  </svg>`;
+}
+
+function selectTextIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M3 4h10M3 8h7M3 12h5"/>
+  </svg>`;
+}
+
+function listIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <line x1="3" y1="4" x2="13" y2="4"/>
+    <line x1="3" y1="8" x2="13" y2="8"/>
+    <line x1="3" y1="12" x2="13" y2="12"/>
+  </svg>`;
+}
+
+function freezeIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M8 2v12M2 8h12M4 4l8 8M12 4l-8 8"/>
+  </svg>`;
+}
+
+function copyIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="5" y="5" width="8" height="8" rx="1"/>
+    <path d="M3 11V3h8"/>
+  </svg>`;
+}
+
+function settingsIcon(): string {
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="8" cy="8" r="2"/>
+    <path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
+  </svg>`;
+}
