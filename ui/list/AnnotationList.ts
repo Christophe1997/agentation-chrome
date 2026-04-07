@@ -106,6 +106,11 @@ export class AnnotationList {
       this.eventBus.emit('annotation-delete', ann.id);
     });
 
+    // Click on row opens the edit dialog
+    row.addEventListener('click', () => {
+      this.eventBus.emit('marker-click', ann.id);
+    });
+
     return row;
   }
 

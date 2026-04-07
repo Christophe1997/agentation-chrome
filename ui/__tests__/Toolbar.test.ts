@@ -19,10 +19,10 @@ describe('Toolbar', () => {
     toolbar.destroy();
   });
 
-  it('renders exactly 6 buttons', () => {
+  it('renders exactly 5 buttons', () => {
     const { container, toolbar } = makeEnv();
     const buttons = container.querySelectorAll('button');
-    expect(buttons.length).toBe(6);
+    expect(buttons.length).toBe(5);
     toolbar.destroy();
   });
 

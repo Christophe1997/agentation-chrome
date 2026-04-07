@@ -23,6 +23,10 @@ export class AgentationApp {
   private captureListener: ((e: PointerEvent) => void) | null = null;
   private pushStateOrig: typeof history.pushState;
   private replaceStateOrig: typeof history.replaceState;
+  private savedCursor: string = '';
+  private escHandler: ((e: KeyboardEvent) => void) | null = null;
+  private annotateActive = false;
+  private listVisible = false;
 
   constructor(container: HTMLElement, _shadow: ShadowRoot) {
     this.eventBus = new EventEmitter();
@@ -35,6 +39,9 @@ export class AgentationApp {
 
     this._wireEventBus();
 
+    this.escHandler = this._handleGlobalEsc.bind(this);
+    document.addEventListener('keydown', this.escHandler);
+
     this.pushStateOrig = history.pushState.bind(history);
     this.replaceStateOrig = history.replaceState.bind(history);
     this.setupNavigationDetection();
@@ -45,7 +52,12 @@ export class AgentationApp {
 
   enableAnnotateMode(): void {
     if (this.captureListener) return;
+    this.savedCursor = document.documentElement.style.cursor;
+    document.documentElement.style.cursor = 'crosshair';
     this.captureListener = async (e: PointerEvent) => {
+      // Don't capture clicks while dialog is open
+      if (this.dialog.isOpen) return;
+
       const target = e.target as HTMLElement;
       if (target.closest(SELECTORS.EXTENSION) || target.closest(SELECTORS.ROOT)) return;
 
@@ -67,10 +79,16 @@ export class AgentationApp {
     if (!this.captureListener) return;
     document.removeEventListener('pointerdown', this.captureListener, { capture: true });
     this.captureListener = null;
+    document.documentElement.style.cursor = this.savedCursor;
+    this.savedCursor = '';
   }
 
   destroy(): void {
     this.disableAnnotateMode();
+    if (this.escHandler) {
+      document.removeEventListener('keydown', this.escHandler);
+      this.escHandler = null;
+    }
     if (isFrozen()) unfreeze();
     this.markerRegistry.destroy();
     this.toolbar.destroy();
@@ -80,8 +98,32 @@ export class AgentationApp {
     this.restoreNavigationPatches();
   }
 
+  private _handleGlobalEsc(e: KeyboardEvent): void {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+
+    // Priority 1: Close dialog if open
+    if (this.dialog.isOpen) {
+      this.dialog.close();
+      return;
+    }
+
+    // Priority 2: Close list panel if open
+    if (this.listVisible) {
+      this.eventBus.emit('list-toggle', false);
+      return;
+    }
+
+    // Priority 3: Exit annotate mode if active
+    if (this.annotateActive) {
+      this.eventBus.emit('annotate-mode', false);
+      return;
+    }
+  }
+
   private _wireEventBus(): void {
     this.eventBus.on('annotate-mode', (active) => {
+      this.annotateActive = active;
       if (active) {
         this.enableAnnotateMode();
       } else {
@@ -90,6 +132,7 @@ export class AgentationApp {
     });
 
     this.eventBus.on('list-toggle', (open) => {
+      this.listVisible = open;
       this.annotationList.toggle(open);
     });
 

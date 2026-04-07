@@ -5,6 +5,7 @@ export default defineConfig({
     name: 'Agentation',
     version: '0.1.0',
     description: 'Visual feedback toolbar for any website',
+    action: {},
     permissions: ['storage', 'activeTab', 'scripting', 'alarms'],
     host_permissions: ['<all_urls>', 'http://localhost:4747/*'],
     content_security_policy: {

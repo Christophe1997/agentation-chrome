@@ -14,6 +14,10 @@ export class AnnotationDialog {
   private currentInfo: ElementInfo | null = null;
   private currentAnnotation: Annotation | null = null;
 
+  get isOpen(): boolean {
+    return !this.container.hidden;
+  }
+
   constructor(parent: HTMLElement, eventBus: EventEmitter) {
     this.eventBus = eventBus;
     this.container = this._buildDOM(parent);
@@ -117,7 +121,6 @@ export class AnnotationDialog {
     // Keyboard
     this.container.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        e.stopPropagation();
         this.close();
         return;
       }

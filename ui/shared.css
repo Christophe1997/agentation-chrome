@@ -30,6 +30,48 @@
   --agt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --agt-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
   --agt-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Light-theme tokens ── */
+
+  /* Backgrounds */
+  --agt-light-bg: #fff;
+  --agt-light-hover: #f0f0f0;
+  --agt-light-btn-secondary-bg: #f5f5f5;
+  --agt-light-btn-secondary-hover: #ebebeb;
+  --agt-light-danger-hover: #fef2f2;
+  --agt-light-row-hover: #f9f9f9;
+
+  /* Borders */
+  --agt-light-border: #e0e0e0;
+  --agt-light-divider: #f0f0f0;
+  --agt-light-input-border: #ddd;
+  --agt-light-row-border: #f7f7f7;
+  --agt-light-danger-border: #fca5a5;
+
+  /* Text */
+  --agt-light-text: #1a1a1a;
+  --agt-light-text-secondary: #666;
+  --agt-light-text-muted: #888;
+  --agt-light-text-tertiary: #444;
+  --agt-light-text-on-accent: #fff;
+
+  /* Accent */
+  --agt-light-accent: #6366f1;
+  --agt-light-accent-hover: #4f46e5;
+  --agt-light-accent-ring: 0 0 0 2px rgba(99, 102, 241, 0.15);
+
+  /* Danger */
+  --agt-light-danger: #dc2626;
+
+  /* Status (background / text pairs) */
+  --agt-light-status-pending-bg: #fef9c3;
+  --agt-light-status-pending-text: #92400e;
+  --agt-light-status-syncing-bg: #dbeafe;
+  --agt-light-status-syncing-text: #1e40af;
+  --agt-light-status-synced-bg: #dcfce7;
+  --agt-light-status-synced-text: #166534;
+  --agt-light-status-failed-bg: #fee2e2;
+  --agt-light-status-failed-text: #991b1b;
 }
 
 @media (prefers-reduced-motion: reduce) {
