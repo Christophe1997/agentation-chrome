@@ -27,12 +27,23 @@ export default defineContentScript({
       if (sender.tab) return;
 
       if (msg.type === 'TOGGLE_TOOLBAR') {
+        // Resolve tab ID before sending activation messages
+        const sendToggle = async (type: 'TOOLBAR_ACTIVATED' | 'TOOLBAR_DEACTIVATED') => {
+          try {
+            const tab = await browser.tabs.getCurrent();
+            const tabId = tab?.id ?? -1;
+            await browser.runtime.sendMessage({ type, tabId });
+          } catch {
+            // Extension context invalidated — ignore
+          }
+        };
+
         if (ui.mounted) {
           ui.remove();
-          browser.runtime.sendMessage({ type: 'TOOLBAR_DEACTIVATED', tabId: -1 }).catch(() => {});
+          sendToggle('TOOLBAR_DEACTIVATED');
         } else {
           ui.mount();
-          browser.runtime.sendMessage({ type: 'TOOLBAR_ACTIVATED', tabId: -1 }).catch(() => {});
+          sendToggle('TOOLBAR_ACTIVATED');
         }
       }
     });

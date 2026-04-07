@@ -1,7 +1,7 @@
 ---
 title: "feat: Phase 2 — Core UI (Shadow DOM, Toolbar, Click-to-Annotate, Markers)"
 type: feat
-status: active
+status: complete
 date: 2026-04-03
 origin: docs/plans/2026-04-03-001-feat-agentation-chrome-clean-room-reimplementation-plan.md
 ---

@@ -1,7 +1,7 @@
 ---
 title: "feat: Phase 1 — Foundation (Scaffolding, Types, Storage, Background)"
 type: feat
-status: active
+status: complete
 date: 2026-04-03
 origin: docs/plans/2026-04-03-001-feat-agentation-chrome-clean-room-reimplementation-plan.md
 ---

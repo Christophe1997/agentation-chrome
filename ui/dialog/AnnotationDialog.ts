@@ -10,6 +10,7 @@ export class AnnotationDialog {
   private container: HTMLElement;
   private eventBus: EventEmitter;
   private triggerButton: HTMLElement | null = null;
+  private currentPosition: { x: number; y: number } | null = null;
   private currentInfo: ElementInfo | null = null;
   private currentAnnotation: Annotation | null = null;
 
@@ -27,6 +28,8 @@ export class AnnotationDialog {
   ): void {
     this.currentInfo = elementInfo;
     this.currentAnnotation = existingAnnotation ?? null;
+    this.currentPosition = position;
+    this.triggerButton = document.activeElement as HTMLElement;
 
     // Populate header
     const titleEl = this.container.querySelector('#agt-dialog-title') as HTMLElement;
@@ -61,6 +64,7 @@ export class AnnotationDialog {
     this.triggerButton = null;
     this.currentInfo = null;
     this.currentAnnotation = null;
+    this.currentPosition = null;
     this.eventBus.emit('popup-close');
   }
 
@@ -115,10 +119,28 @@ export class AnnotationDialog {
       if (e.key === 'Escape') {
         e.stopPropagation();
         this.close();
+        return;
       }
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         this._handleSubmit();
+        return;
+      }
+      // Focus trap: cycle through focusable children
+      if (e.key === 'Tab') {
+        const focusable = this.container.querySelectorAll<HTMLElement>(
+          'button, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     });
   }
@@ -138,8 +160,8 @@ export class AnnotationDialog {
           element: this.currentInfo.name,
           elementPath: this.currentInfo.path,
           fullPath: this.currentInfo.fullPath,
-          x: 0,
-          y: 0,
+          x: this.currentPosition?.x ?? 0,
+          y: this.currentPosition?.y ?? 0,
           timestamp: Date.now(),
           cssClasses: this.currentInfo.cssClasses,
           computedStyles: this.currentInfo.computedStyles,

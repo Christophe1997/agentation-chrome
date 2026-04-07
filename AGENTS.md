@@ -51,7 +51,7 @@ Use Conventional Commits (see `agd:conventional-commits` skill). Scope examples:
 ## Implementation Status
 
 - [x] Phase 1: Foundation (types, storage, background service worker)
-- [ ] Phase 2: Core UI (Shadow DOM, toolbar, click-to-annotate, markers)
-- [ ] Phase 3: Features (dialog, list panel, markdown copy, freeze, options)
+- [x] Phase 2: Core UI (Shadow DOM, toolbar, click-to-annotate, markers)
+- [x] Phase 3: Features (dialog, list panel, markdown copy, freeze, options)
 
 See `docs/plans/` for detailed phase plans.
