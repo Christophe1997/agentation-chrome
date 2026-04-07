@@ -1,0 +1,134 @@
+.agt-dialog {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.agt-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+}
+
+.agt-dialog-title {
+  font-weight: 600;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.agt-dialog-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #666;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.agt-dialog-close:hover {
+  background: #f0f0f0;
+}
+
+.agt-dialog-element-info {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: #666;
+}
+
+.agt-dialog-path {
+  font-family: monospace;
+  font-size: 11px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agt-dialog-body {
+  padding: 8px 14px;
+}
+
+.agt-dialog-textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.agt-dialog-textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.agt-dialog-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px 14px 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.agt-dialog-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.agt-dialog-btn--submit {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.agt-dialog-btn--submit:hover {
+  background: #4f46e5;
+}
+
+.agt-dialog-btn--cancel {
+  background: #f5f5f5;
+  color: #444;
+  border-color: #ddd;
+}
+
+.agt-dialog-btn--cancel:hover {
+  background: #ebebeb;
+}
+
+.agt-dialog-btn--delete {
+  background: #fff;
+  color: #dc2626;
+  border-color: #fca5a5;
+  margin-right: auto;
+}
+
+.agt-dialog-btn--delete:hover {
+  background: #fef2f2;
+}

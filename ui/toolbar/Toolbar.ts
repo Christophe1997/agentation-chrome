@@ -18,24 +18,67 @@ const BUTTONS: ButtonDef[] = [
 export class Toolbar {
   private toolbarEl: HTMLElement;
   private annotateBtn: HTMLButtonElement;
+  private listBtn: HTMLButtonElement;
+  private freezeBtn: HTMLButtonElement;
   private annotateMode = false;
+  private listOpen = false;
+  private frozen = false;
   private unsubscribers: Array<() => void> = [];
 
   constructor(parent: HTMLElement, eventBus: EventEmitter) {
     this.toolbarEl = this.buildDOM(parent);
     this.annotateBtn = this.toolbarEl.querySelector('[aria-label="Annotate"]') as HTMLButtonElement;
+    this.listBtn = this.toolbarEl.querySelector('[aria-label="List Annotations"]') as HTMLButtonElement;
+    this.freezeBtn = this.toolbarEl.querySelector('[aria-label="Freeze Page"]') as HTMLButtonElement;
 
+    // Annotate button
     this.annotateBtn.addEventListener('click', () => {
       this.annotateMode = !this.annotateMode;
       this.annotateBtn.setAttribute('aria-pressed', String(this.annotateMode));
       eventBus.emit('annotate-mode', this.annotateMode);
     });
 
-    const unsub = eventBus.on('annotate-mode', (active) => {
+    // List toggle button
+    this.listBtn.addEventListener('click', () => {
+      this.listOpen = !this.listOpen;
+      this.listBtn.setAttribute('aria-pressed', String(this.listOpen));
+      eventBus.emit('list-toggle', this.listOpen);
+    });
+
+    // Freeze toggle button
+    this.freezeBtn.addEventListener('click', () => {
+      this.frozen = !this.frozen;
+      this.freezeBtn.setAttribute('aria-pressed', String(this.frozen));
+      eventBus.emit('freeze-toggle', this.frozen);
+    });
+
+    // Copy button
+    const copyBtn = this.toolbarEl.querySelector('[aria-label="Copy Markdown"]') as HTMLButtonElement;
+    copyBtn.addEventListener('click', () => {
+      // emit copy with empty string — app layer will generate markdown
+      eventBus.emit('copy', '');
+    });
+
+    // Settings button
+    const settingsBtn = this.toolbarEl.querySelector('[aria-label="Settings"]') as HTMLButtonElement;
+    settingsBtn.addEventListener('click', () => {
+      browser.runtime.openOptionsPage?.().catch(() => {});
+    });
+
+    // Sync state back from eventBus
+    const unsub1 = eventBus.on('annotate-mode', (active) => {
       this.annotateMode = active;
       this.annotateBtn.setAttribute('aria-pressed', String(active));
     });
-    this.unsubscribers.push(unsub);
+    const unsub2 = eventBus.on('list-toggle', (open) => {
+      this.listOpen = open;
+      this.listBtn.setAttribute('aria-pressed', String(open));
+    });
+    const unsub3 = eventBus.on('freeze-toggle', (frozen) => {
+      this.frozen = frozen;
+      this.freezeBtn.setAttribute('aria-pressed', String(frozen));
+    });
+    this.unsubscribers.push(unsub1, unsub2, unsub3);
   }
 
   private buildDOM(parent: HTMLElement): HTMLElement {

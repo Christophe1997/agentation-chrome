@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentation Settings</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="options-container">
+    <h1 class="options-title">Agentation Settings</h1>
+
+    <section class="options-section">
+      <h2>MCP Server</h2>
+      <div class="options-field">
+        <label for="server-url">Server URL</label>
+        <div class="options-input-row">
+          <input
+            type="url"
+            id="server-url"
+            name="serverUrl"
+            placeholder="http://localhost:4747"
+          />
+          <button id="test-connection" class="btn btn-secondary">Test Connection</button>
+        </div>
+        <span id="connection-status" class="connection-status" hidden></span>
+      </div>
+    </section>
+
+    <section class="options-section">
+      <h2>Detail Level</h2>
+      <p class="options-hint">Controls how much detail is included when copying annotations as Markdown.</p>
+      <div class="options-radio-group">
+        <label class="options-radio">
+          <input type="radio" name="detailLevel" value="compact" />
+          <strong>Compact</strong> — numbered list with element name and comment
+        </label>
+        <label class="options-radio">
+          <input type="radio" name="detailLevel" value="standard" />
+          <strong>Standard</strong> — adds DOM path, React components, selected text
+        </label>
+        <label class="options-radio">
+          <input type="radio" name="detailLevel" value="detailed" />
+          <strong>Detailed</strong> — adds CSS classes, bounding box, nearby context
+        </label>
+        <label class="options-radio">
+          <input type="radio" name="detailLevel" value="forensic" />
+          <strong>Forensic</strong> — full DOM path, all computed styles, accessibility info
+        </label>
+      </div>
+    </section>
+
+    <section class="options-section">
+      <h2>Annotations</h2>
+      <p>Total annotations stored: <strong id="annotation-count">—</strong></p>
+      <button id="clear-all-data" class="btn btn-danger">Clear all data</button>
+    </section>
+
+    <div class="options-footer">
+      <button id="save-settings" class="btn btn-primary">Save settings</button>
+      <span id="save-toast" class="save-toast" hidden>Settings saved.</span>
+    </div>
+  </div>
+
+  <script type="module" src="main.ts"></script>
+</body>
+</html>
