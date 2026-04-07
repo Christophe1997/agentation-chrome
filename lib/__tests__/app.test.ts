@@ -104,13 +104,17 @@ describe('AgentationApp', () => {
     normalEl.textContent = 'click me';
     document.body.appendChild(normalEl);
 
-    // Mock elementFromPoint to return our element at the click position
+    // Mock elementFromPoint to return our element
     const origEFP = document.elementFromPoint;
     document.elementFromPoint = vi.fn(() => normalEl);
 
+    // Dispatch pointerdown then pointerup at the same position (click, no drag)
     const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 });
     Object.defineProperty(down, 'target', { value: normalEl });
     document.dispatchEvent(down);
+
+    const up = new PointerEvent('pointerup', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 });
+    document.dispatchEvent(up);
 
     // Wait for async identifyElementWithReact
     await new Promise((r) => setTimeout(r, 10));

@@ -21,7 +21,12 @@ export class AgentationApp {
   private sessionId: string | null = null;
   private captureListener: ((e: PointerEvent) => void) | null = null;
   private hoverListener: ((e: PointerEvent) => void) | null = null;
+  private moveListener: ((e: PointerEvent) => void) | null = null;
+  private upListener: ((e: PointerEvent) => void) | null = null;
   private hoverOverlay: HTMLElement | null = null;
+  private rubberBandOverlay: HTMLElement | null = null;
+  private dragStartX = 0;
+  private dragStartY = 0;
   private pushStateOrig: typeof history.pushState;
   private replaceStateOrig: typeof history.replaceState;
   private savedCursor: string = '';
@@ -53,41 +58,41 @@ export class AgentationApp {
   enableAnnotateMode(): void {
     if (this.captureListener) return;
     this.savedCursor = document.documentElement.style.cursor;
-    document.documentElement.style.cursor = 'default';
+    document.documentElement.style.cursor = 'crosshair';
 
-    // Persistent hover highlight overlay — follows element under cursor
-    const overlay = document.createElement('div');
-    overlay.setAttribute('data-agt-ext', '');
-    overlay.style.cssText =
+    // Persistent hover highlight overlay — shows element bounding box under cursor
+    const hoverEl = document.createElement('div');
+    hoverEl.setAttribute('data-agt-ext', '');
+    hoverEl.style.cssText =
       'position:fixed;pointer-events:none;z-index:2147483645;box-sizing:border-box;' +
       'border:2px solid rgba(99,102,241,0.9);background:rgba(99,102,241,0.08);' +
       'border-radius:2px;transition:none;display:none;';
-    document.body.appendChild(overlay);
-    this.hoverOverlay = overlay;
+    document.body.appendChild(hoverEl);
+    this.hoverOverlay = hoverEl;
 
-    // Hover: highlight element bounding box under cursor
+    // Hover: highlight element bounding box under cursor (only when not dragging)
     this.hoverListener = (e: PointerEvent) => {
-      if (this.dialog.isOpen) { overlay.style.display = 'none'; return; }
+      if (this.dialog.isOpen || this.rubberBandOverlay) { hoverEl.style.display = 'none'; return; }
       const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
       if (!target || target === document.body || target === document.documentElement) {
-        overlay.style.display = 'none';
+        hoverEl.style.display = 'none';
         return;
       }
       if (target.closest(SELECTORS.EXTENSION) || target.closest(SELECTORS.ROOT)) {
-        overlay.style.display = 'none';
+        hoverEl.style.display = 'none';
         return;
       }
       // Batch: read rect first, then write styles
       const rect = target.getBoundingClientRect();
-      overlay.style.display = 'block';
-      overlay.style.left   = `${rect.left}px`;
-      overlay.style.top    = `${rect.top}px`;
-      overlay.style.width  = `${rect.width}px`;
-      overlay.style.height = `${rect.height}px`;
+      hoverEl.style.display = 'block';
+      hoverEl.style.left   = `${rect.left}px`;
+      hoverEl.style.top    = `${rect.top}px`;
+      hoverEl.style.width  = `${rect.width}px`;
+      hoverEl.style.height = `${rect.height}px`;
     };
     document.addEventListener('pointermove', this.hoverListener);
 
-    // Click: pick the element under cursor and open annotation dialog
+    // Pointerdown: begin drag. If user releases without moving (click), treat as hover-pick.
     this.captureListener = (e: PointerEvent) => {
       if (this.dialog.isOpen) return;
       const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -97,15 +102,85 @@ export class AgentationApp {
       e.preventDefault();
       e.stopPropagation();
 
-      overlay.style.display = 'none';
+      hoverEl.style.display = 'none';
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
 
-      void identifyElementWithReact(target, identifyElement).then((elementInfo) => {
+      // Create rubber-band overlay (hidden until drag threshold exceeded)
+      const rbOverlay = document.createElement('div');
+      rbOverlay.setAttribute('data-agt-ext', '');
+      rbOverlay.style.cssText =
+        'position:fixed;pointer-events:none;z-index:2147483646;' +
+        'border:2px solid rgba(99,102,241,0.8);background:rgba(99,102,241,0.08);' +
+        'border-radius:2px;transition:none;display:none;';
+      rbOverlay.style.left = `${e.clientX}px`;
+      rbOverlay.style.top  = `${e.clientY}px`;
+      rbOverlay.style.width  = '0px';
+      rbOverlay.style.height = '0px';
+      document.body.appendChild(rbOverlay);
+      this.rubberBandOverlay = rbOverlay;
+
+      const DRAG_THRESHOLD = 6; // px before switching to rubber-band mode
+
+      this.moveListener = (me: PointerEvent) => {
+        me.preventDefault();
+        const dx = Math.abs(me.clientX - this.dragStartX);
+        const dy = Math.abs(me.clientY - this.dragStartY);
+        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+          rbOverlay.style.display = 'block';
+        }
+        // Batch: compute dimensions (reads), then write
+        const x = Math.min(this.dragStartX, me.clientX);
+        const y = Math.min(this.dragStartY, me.clientY);
+        const w = Math.abs(me.clientX - this.dragStartX);
+        const h = Math.abs(me.clientY - this.dragStartY);
+        rbOverlay.style.left   = `${x}px`;
+        rbOverlay.style.top    = `${y}px`;
+        rbOverlay.style.width  = `${w}px`;
+        rbOverlay.style.height = `${h}px`;
+      };
+
+      this.upListener = async (ue: PointerEvent) => {
+        ue.preventDefault();
+        document.removeEventListener('pointermove', this.moveListener!);
+        document.removeEventListener('pointerup', this.upListener!);
+        this.moveListener = null;
+        this.upListener = null;
+
+        rbOverlay.remove();
+        this.rubberBandOverlay = null;
+
+        const selWidth  = Math.abs(ue.clientX - this.dragStartX);
+        const selHeight = Math.abs(ue.clientY - this.dragStartY);
+        const isDrag = selWidth > DRAG_THRESHOLD || selHeight > DRAG_THRESHOLD;
+
+        let pickX: number;
+        let pickY: number;
+
+        if (isDrag) {
+          // Rubber-band: use center of drawn selection
+          if (selWidth < 10 || selHeight < 10) return; // too small — discard
+          pickX = Math.round(Math.min(this.dragStartX, ue.clientX) + selWidth / 2);
+          pickY = Math.round(Math.min(this.dragStartY, ue.clientY) + selHeight / 2);
+        } else {
+          // Click: use pointer-down position
+          pickX = this.dragStartX;
+          pickY = this.dragStartY;
+        }
+
+        const targetEl = document.elementFromPoint(pickX, pickY) as HTMLElement | null;
+        if (!targetEl || targetEl.closest(SELECTORS.EXTENSION) || targetEl.closest(SELECTORS.ROOT)) return;
+
+        const elementInfo = await identifyElementWithReact(targetEl, identifyElement);
         this.dialog.open(
           elementInfo,
-          { x: e.clientX, y: e.clientY },
+          { x: pickX, y: pickY },
           window.getSelection()?.toString() ?? undefined,
         );
-      });
+      };
+
+      document.addEventListener('pointermove', this.moveListener);
+      document.addEventListener('pointerup', this.upListener);
     };
     document.addEventListener('pointerdown', this.captureListener, { capture: true });
   }
@@ -119,9 +194,21 @@ export class AgentationApp {
       document.removeEventListener('pointermove', this.hoverListener);
       this.hoverListener = null;
     }
+    if (this.moveListener) {
+      document.removeEventListener('pointermove', this.moveListener);
+      this.moveListener = null;
+    }
+    if (this.upListener) {
+      document.removeEventListener('pointerup', this.upListener);
+      this.upListener = null;
+    }
     if (this.hoverOverlay) {
       this.hoverOverlay.remove();
       this.hoverOverlay = null;
+    }
+    if (this.rubberBandOverlay) {
+      this.rubberBandOverlay.remove();
+      this.rubberBandOverlay = null;
     }
     document.documentElement.style.cursor = this.savedCursor;
     this.savedCursor = '';
