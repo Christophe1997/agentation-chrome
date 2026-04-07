@@ -20,11 +20,8 @@ export class AgentationApp {
   private tabId: number | null = null;
   private sessionId: string | null = null;
   private captureListener: ((e: PointerEvent) => void) | null = null;
-  private moveListener: ((e: PointerEvent) => void) | null = null;
-  private upListener: ((e: PointerEvent) => void) | null = null;
-  private selectionOverlay: HTMLElement | null = null;
-  private selectStartX = 0;
-  private selectStartY = 0;
+  private hoverListener: ((e: PointerEvent) => void) | null = null;
+  private hoverOverlay: HTMLElement | null = null;
   private pushStateOrig: typeof history.pushState;
   private replaceStateOrig: typeof history.replaceState;
   private savedCursor: string = '';
@@ -56,82 +53,59 @@ export class AgentationApp {
   enableAnnotateMode(): void {
     if (this.captureListener) return;
     this.savedCursor = document.documentElement.style.cursor;
-    document.documentElement.style.cursor = 'crosshair';
+    document.documentElement.style.cursor = 'default';
 
+    // Persistent hover highlight overlay — follows element under cursor
+    const overlay = document.createElement('div');
+    overlay.setAttribute('data-agt-ext', '');
+    overlay.style.cssText =
+      'position:fixed;pointer-events:none;z-index:2147483645;box-sizing:border-box;' +
+      'border:2px solid rgba(99,102,241,0.9);background:rgba(99,102,241,0.08);' +
+      'border-radius:2px;transition:none;display:none;';
+    document.body.appendChild(overlay);
+    this.hoverOverlay = overlay;
+
+    // Hover: highlight element bounding box under cursor
+    this.hoverListener = (e: PointerEvent) => {
+      if (this.dialog.isOpen) { overlay.style.display = 'none'; return; }
+      const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      if (!target || target === document.body || target === document.documentElement) {
+        overlay.style.display = 'none';
+        return;
+      }
+      if (target.closest(SELECTORS.EXTENSION) || target.closest(SELECTORS.ROOT)) {
+        overlay.style.display = 'none';
+        return;
+      }
+      // Batch: read rect first, then write styles
+      const rect = target.getBoundingClientRect();
+      overlay.style.display = 'block';
+      overlay.style.left   = `${rect.left}px`;
+      overlay.style.top    = `${rect.top}px`;
+      overlay.style.width  = `${rect.width}px`;
+      overlay.style.height = `${rect.height}px`;
+    };
+    document.addEventListener('pointermove', this.hoverListener);
+
+    // Click: pick the element under cursor and open annotation dialog
     this.captureListener = (e: PointerEvent) => {
       if (this.dialog.isOpen) return;
-
-      const target = e.target as HTMLElement;
+      const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      if (!target) return;
       if (target.closest(SELECTORS.EXTENSION) || target.closest(SELECTORS.ROOT)) return;
 
       e.preventDefault();
       e.stopPropagation();
 
-      this.selectStartX = e.clientX;
-      this.selectStartY = e.clientY;
+      overlay.style.display = 'none';
 
-      // Create selection overlay
-      const overlay = document.createElement('div');
-      overlay.setAttribute('data-agt-ext', '');
-      overlay.style.cssText =
-        'position:fixed;pointer-events:none;z-index:2147483646;' +
-        'border:2px solid rgba(99,102,241,0.8);background:rgba(99,102,241,0.08);' +
-        'border-radius:2px;transition:none;';
-      overlay.style.left = `${e.clientX}px`;
-      overlay.style.top = `${e.clientY}px`;
-      overlay.style.width = '0px';
-      overlay.style.height = '0px';
-      document.body.appendChild(overlay);
-      this.selectionOverlay = overlay;
-
-      this.moveListener = (me: PointerEvent) => {
-        me.preventDefault();
-        const x = Math.min(this.selectStartX, me.clientX);
-        const y = Math.min(this.selectStartY, me.clientY);
-        const w = Math.abs(me.clientX - this.selectStartX);
-        const h = Math.abs(me.clientY - this.selectStartY);
-        overlay.style.left = `${x}px`;
-        overlay.style.top = `${y}px`;
-        overlay.style.width = `${w}px`;
-        overlay.style.height = `${h}px`;
-      };
-      this.upListener = async (ue: PointerEvent) => {
-        ue.preventDefault();
-
-        // Clean up move/up listeners
-        document.removeEventListener('pointermove', this.moveListener!);
-        document.removeEventListener('pointerup', this.upListener!);
-        this.moveListener = null;
-        this.upListener = null;
-
-        // Compute selection rect from coordinates (avoids getBoundingClientRect in jsdom)
-        const selLeft = Math.min(this.selectStartX, ue.clientX);
-        const selTop = Math.min(this.selectStartY, ue.clientY);
-        const selWidth = Math.abs(ue.clientX - this.selectStartX);
-        const selHeight = Math.abs(ue.clientY - this.selectStartY);
-
-        overlay.remove();
-        this.selectionOverlay = null;
-
-        // Skip tiny selections (accidental clicks)
-        if (selWidth < 10 || selHeight < 10) return;
-
-        // Find element at center of selection
-        const centerX = Math.round(selLeft + selWidth / 2);
-        const centerY = Math.round(selTop + selHeight / 2);
-        const targetEl = document.elementFromPoint(centerX, centerY) as HTMLElement;
-        if (!targetEl || targetEl.closest(SELECTORS.EXTENSION) || targetEl.closest(SELECTORS.ROOT)) return;
-
-        const elementInfo = await identifyElementWithReact(targetEl, identifyElement);
+      void identifyElementWithReact(target, identifyElement).then((elementInfo) => {
         this.dialog.open(
           elementInfo,
-          { x: centerX, y: centerY },
+          { x: e.clientX, y: e.clientY },
           window.getSelection()?.toString() ?? undefined,
         );
-      };
-
-      document.addEventListener('pointermove', this.moveListener);
-      document.addEventListener('pointerup', this.upListener);
+      });
     };
     document.addEventListener('pointerdown', this.captureListener, { capture: true });
   }
@@ -141,17 +115,13 @@ export class AgentationApp {
       document.removeEventListener('pointerdown', this.captureListener, { capture: true });
       this.captureListener = null;
     }
-    if (this.moveListener) {
-      document.removeEventListener('pointermove', this.moveListener);
-      this.moveListener = null;
+    if (this.hoverListener) {
+      document.removeEventListener('pointermove', this.hoverListener);
+      this.hoverListener = null;
     }
-    if (this.upListener) {
-      document.removeEventListener('pointerup', this.upListener);
-      this.upListener = null;
-    }
-    if (this.selectionOverlay) {
-      this.selectionOverlay.remove();
-      this.selectionOverlay = null;
+    if (this.hoverOverlay) {
+      this.hoverOverlay.remove();
+      this.hoverOverlay = null;
     }
     document.documentElement.style.cursor = this.savedCursor;
     this.savedCursor = '';
@@ -294,6 +264,7 @@ export class AgentationApp {
   }
 
   private handleNavigation = (): void => {
+    if (this.annotateActive) this.disableAnnotateMode();
     this.markerRegistry.removeAll();
     this.url = window.location.href;
     this.annotations = [];

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EventEmitter } from '../event-emitter';
 
 // jsdom does not implement elementFromPoint
 document.elementFromPoint = vi.fn(() => null) as unknown as typeof document.elementFromPoint;
@@ -99,32 +98,19 @@ describe('AgentationApp', () => {
     extEl.remove();
   });
 
-  it('drag-select on a normal element calls identifyElement', async () => {
+  it('click on a normal element calls identifyElement', async () => {
     app.enableAnnotateMode();
     const normalEl = document.createElement('p');
     normalEl.textContent = 'click me';
-    normalEl.style.position = 'absolute';
-    normalEl.style.left = '100px';
-    normalEl.style.top = '100px';
-    normalEl.style.width = '200px';
-    normalEl.style.height = '50px';
     document.body.appendChild(normalEl);
 
-    // Simulate a drag from (50,50) to (150,150) — center at (100,100) hits normalEl
-    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 50, clientY: 50 });
-    Object.defineProperty(down, 'target', { value: normalEl });
-    document.dispatchEvent(down);
-
-    const move = new PointerEvent('pointermove', { bubbles: true, cancelable: true, clientX: 150, clientY: 150 });
-    document.dispatchEvent(move);
-
-    // elementFromPoint needs the element to actually be at the position in jsdom
-    // Mock elementFromPoint to return our element at the center of the selection
+    // Mock elementFromPoint to return our element at the click position
     const origEFP = document.elementFromPoint;
     document.elementFromPoint = vi.fn(() => normalEl);
 
-    const up = new PointerEvent('pointerup', { bubbles: true, cancelable: true, clientX: 150, clientY: 150 });
-    document.dispatchEvent(up);
+    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 });
+    Object.defineProperty(down, 'target', { value: normalEl });
+    document.dispatchEvent(down);
 
     // Wait for async identifyElementWithReact
     await new Promise((r) => setTimeout(r, 10));
@@ -133,6 +119,21 @@ describe('AgentationApp', () => {
 
     document.elementFromPoint = origEFP;
     normalEl.remove();
+  });
+
+  it('enableAnnotateMode adds a pointermove listener for hover highlight', () => {
+    const addSpy = vi.spyOn(document, 'addEventListener');
+    app.enableAnnotateMode();
+    expect(addSpy).toHaveBeenCalledWith('pointermove', expect.any(Function));
+    addSpy.mockRestore();
+  });
+
+  it('disableAnnotateMode removes the pointermove listener and hover overlay', () => {
+    app.enableAnnotateMode();
+    const removeSpy = vi.spyOn(document, 'removeEventListener');
+    app.disableAnnotateMode();
+    expect(removeSpy).toHaveBeenCalledWith('pointermove', expect.any(Function));
+    removeSpy.mockRestore();
   });
 
   it('destroy() does not throw', () => {
