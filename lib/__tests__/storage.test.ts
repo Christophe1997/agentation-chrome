@@ -18,7 +18,7 @@ const { store, mockAnnotations, mockSyncStatus, mockSessions, mockSettings, mock
       mockAnnotations: makeItem<Record<string, unknown[]>>('local:annotations', {}),
       mockSyncStatus: makeItem<Record<string, string>>('local:syncStatus', {}),
       mockSessions: makeItem<Record<string, unknown>>('session:sessions', {}),
-      mockSettings: makeItem('local:settings', { serverUrl: 'http://localhost:4747', detailLevel: 'standard' }),
+      mockSettings: makeItem('local:settings', { serverUrl: 'http://localhost:14747', detailLevel: 'standard' }),
       mockRetryQueue: makeItem<unknown[]>('local:retryQueue', []),
     };
   });
@@ -238,7 +238,7 @@ describe('getSession / saveSession / removeSession', () => {
 describe('loadSettings / saveSettings', () => {
   it('returns defaults when no settings stored', async () => {
     const result = await loadSettings();
-    expect(result).toEqual({ serverUrl: 'http://localhost:4747', detailLevel: 'standard' });
+    expect(result).toEqual({ serverUrl: 'http://localhost:14747', detailLevel: 'standard' });
   });
 
   it('returns saved settings', async () => {

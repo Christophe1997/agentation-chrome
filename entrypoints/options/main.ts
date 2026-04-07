@@ -34,7 +34,7 @@ async function onSaveSettings(): Promise<void> {
   const selectedRadio = document.querySelector<HTMLInputElement>('input[name="detailLevel"]:checked');
 
   const newSettings: ExtensionSettings = {
-    serverUrl: urlInput.value.trim() || 'http://localhost:4747',
+    serverUrl: urlInput.value.trim() || 'http://localhost:14747',
     detailLevel: (selectedRadio?.value ?? 'standard') as OutputDetailLevel,
   };
 
@@ -45,7 +45,7 @@ async function onSaveSettings(): Promise<void> {
 async function onTestConnection(): Promise<void> {
   const urlInput = document.getElementById('server-url') as HTMLInputElement;
   const statusEl = document.getElementById('connection-status') as HTMLElement;
-  const serverUrl = urlInput.value.trim() || 'http://localhost:4747';
+  const serverUrl = urlInput.value.trim() || 'http://localhost:14747';
 
   statusEl.textContent = 'Testing...';
   statusEl.className = 'connection-status connection-status--testing';

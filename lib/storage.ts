@@ -23,7 +23,7 @@ const sessionsStore = storage.defineItem<Record<string, SessionInfo>>(
 // Extension settings
 const settingsStore = storage.defineItem<ExtensionSettings>('local:settings', {
   fallback: {
-    serverUrl: 'http://localhost:4747',
+    serverUrl: 'http://localhost:14747',
     detailLevel: 'standard',
   },
 });

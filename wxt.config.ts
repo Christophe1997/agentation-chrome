@@ -7,7 +7,7 @@ export default defineConfig({
     description: 'Visual feedback toolbar for any website',
     action: {},
     permissions: ['storage', 'activeTab', 'scripting', 'alarms'],
-    host_permissions: ['<all_urls>', 'http://localhost:4747/*'],
+    host_permissions: ['<all_urls>', 'http://localhost:4747/*', 'http://localhost:14747/*'],
     content_security_policy: {
       extension_pages: "script-src 'self'; object-src 'self';",
     },
