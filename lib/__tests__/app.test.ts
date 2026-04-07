@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from '../event-emitter';
 
+// jsdom does not implement elementFromPoint
+document.elementFromPoint = vi.fn(() => null) as unknown as typeof document.elementFromPoint;
+
 // jsdom does not implement ResizeObserver
 global.ResizeObserver = class ResizeObserver {
   observe = vi.fn();
@@ -96,17 +99,39 @@ describe('AgentationApp', () => {
     extEl.remove();
   });
 
-  it('pointerdown on a normal element calls identifyElement', () => {
+  it('drag-select on a normal element calls identifyElement', async () => {
     app.enableAnnotateMode();
     const normalEl = document.createElement('p');
     normalEl.textContent = 'click me';
+    normalEl.style.position = 'absolute';
+    normalEl.style.left = '100px';
+    normalEl.style.top = '100px';
+    normalEl.style.width = '200px';
+    normalEl.style.height = '50px';
     document.body.appendChild(normalEl);
 
-    const event = new PointerEvent('pointerdown', { bubbles: true, cancelable: true });
-    Object.defineProperty(event, 'target', { value: normalEl });
-    document.dispatchEvent(event);
+    // Simulate a drag from (50,50) to (150,150) — center at (100,100) hits normalEl
+    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 50, clientY: 50 });
+    Object.defineProperty(down, 'target', { value: normalEl });
+    document.dispatchEvent(down);
+
+    const move = new PointerEvent('pointermove', { bubbles: true, cancelable: true, clientX: 150, clientY: 150 });
+    document.dispatchEvent(move);
+
+    // elementFromPoint needs the element to actually be at the position in jsdom
+    // Mock elementFromPoint to return our element at the center of the selection
+    const origEFP = document.elementFromPoint;
+    document.elementFromPoint = vi.fn(() => normalEl);
+
+    const up = new PointerEvent('pointerup', { bubbles: true, cancelable: true, clientX: 150, clientY: 150 });
+    document.dispatchEvent(up);
+
+    // Wait for async identifyElementWithReact
+    await new Promise((r) => setTimeout(r, 10));
 
     expect(identifyElement).toHaveBeenCalledWith(normalEl);
+
+    document.elementFromPoint = origEFP;
     normalEl.remove();
   });
 

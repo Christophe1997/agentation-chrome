@@ -1,10 +1,9 @@
 import { EventEmitter } from './event-emitter';
 import { identifyElement } from './element-identification';
 import { identifyElementWithReact } from './react-detection';
-import { Toolbar } from '../ui/toolbar/Toolbar';
+import { Toolbox } from '../ui/toolbox/Toolbox';
 import { MarkerRegistry } from '../ui/markers/MarkerRegistry';
 import { AnnotationDialog } from '../ui/dialog/AnnotationDialog';
-import { AnnotationList } from '../ui/list/AnnotationList';
 import { generateMarkdown, copyToClipboard } from './generate-output';
 import { freeze, unfreeze, isFrozen } from './freeze-animations';
 import { saveAnnotation, loadAnnotations, deleteAnnotation as deleteAnnotationFromStorage, loadSettings } from './storage';
@@ -13,14 +12,18 @@ import type { Annotation } from './types';
 
 export class AgentationApp {
   private eventBus: EventEmitter;
-  private toolbar: Toolbar;
+  private toolbox: Toolbox;
   private markerRegistry: MarkerRegistry;
   private dialog: AnnotationDialog;
-  private annotationList: AnnotationList;
   private url: string;
   private annotations: Annotation[] = [];
   private tabId: number | null = null;
   private captureListener: ((e: PointerEvent) => void) | null = null;
+  private moveListener: ((e: PointerEvent) => void) | null = null;
+  private upListener: ((e: PointerEvent) => void) | null = null;
+  private selectionOverlay: HTMLElement | null = null;
+  private selectStartX = 0;
+  private selectStartY = 0;
   private pushStateOrig: typeof history.pushState;
   private replaceStateOrig: typeof history.replaceState;
   private savedCursor: string = '';
@@ -33,9 +36,8 @@ export class AgentationApp {
     this.url = window.location.href;
 
     this.markerRegistry = new MarkerRegistry(this.eventBus);
-    this.toolbar = new Toolbar(container, this.eventBus);
+    this.toolbox = new Toolbox(container, this.eventBus);
     this.dialog = new AnnotationDialog(container, this.eventBus);
-    this.annotationList = new AnnotationList(container, this.eventBus);
 
     this._wireEventBus();
 
@@ -54,8 +56,8 @@ export class AgentationApp {
     if (this.captureListener) return;
     this.savedCursor = document.documentElement.style.cursor;
     document.documentElement.style.cursor = 'crosshair';
-    this.captureListener = async (e: PointerEvent) => {
-      // Don't capture clicks while dialog is open
+
+    this.captureListener = (e: PointerEvent) => {
       if (this.dialog.isOpen) return;
 
       const target = e.target as HTMLElement;
@@ -64,21 +66,92 @@ export class AgentationApp {
       e.preventDefault();
       e.stopPropagation();
 
-      const elementInfo = await identifyElementWithReact(target, identifyElement);
-      const position = { x: e.clientX, y: e.clientY };
-      this.dialog.open(
-        elementInfo,
-        position,
-        window.getSelection()?.toString() ?? undefined,
-      );
+      this.selectStartX = e.clientX;
+      this.selectStartY = e.clientY;
+
+      // Create selection overlay
+      const overlay = document.createElement('div');
+      overlay.setAttribute('data-agt-ext', '');
+      overlay.style.cssText =
+        'position:fixed;pointer-events:none;z-index:2147483646;' +
+        'border:2px solid rgba(99,102,241,0.8);background:rgba(99,102,241,0.08);' +
+        'border-radius:2px;transition:none;';
+      overlay.style.left = `${e.clientX}px`;
+      overlay.style.top = `${e.clientY}px`;
+      overlay.style.width = '0px';
+      overlay.style.height = '0px';
+      document.body.appendChild(overlay);
+      this.selectionOverlay = overlay;
+
+      this.moveListener = (me: PointerEvent) => {
+        me.preventDefault();
+        const x = Math.min(this.selectStartX, me.clientX);
+        const y = Math.min(this.selectStartY, me.clientY);
+        const w = Math.abs(me.clientX - this.selectStartX);
+        const h = Math.abs(me.clientY - this.selectStartY);
+        overlay.style.left = `${x}px`;
+        overlay.style.top = `${y}px`;
+        overlay.style.width = `${w}px`;
+        overlay.style.height = `${h}px`;
+      };
+      this.upListener = async (ue: PointerEvent) => {
+        ue.preventDefault();
+
+        // Clean up move/up listeners
+        document.removeEventListener('pointermove', this.moveListener!);
+        document.removeEventListener('pointerup', this.upListener!);
+        this.moveListener = null;
+        this.upListener = null;
+
+        // Compute selection rect from coordinates (avoids getBoundingClientRect in jsdom)
+        const selLeft = Math.min(this.selectStartX, ue.clientX);
+        const selTop = Math.min(this.selectStartY, ue.clientY);
+        const selWidth = Math.abs(ue.clientX - this.selectStartX);
+        const selHeight = Math.abs(ue.clientY - this.selectStartY);
+
+        overlay.remove();
+        this.selectionOverlay = null;
+
+        // Skip tiny selections (accidental clicks)
+        if (selWidth < 10 || selHeight < 10) return;
+
+        // Find element at center of selection
+        const centerX = Math.round(selLeft + selWidth / 2);
+        const centerY = Math.round(selTop + selHeight / 2);
+        const targetEl = document.elementFromPoint(centerX, centerY) as HTMLElement;
+        if (!targetEl || targetEl.closest(SELECTORS.EXTENSION) || targetEl.closest(SELECTORS.ROOT)) return;
+
+        const elementInfo = await identifyElementWithReact(targetEl, identifyElement);
+        this.dialog.open(
+          elementInfo,
+          { x: centerX, y: centerY },
+          window.getSelection()?.toString() ?? undefined,
+        );
+      };
+
+      document.addEventListener('pointermove', this.moveListener);
+      document.addEventListener('pointerup', this.upListener);
     };
     document.addEventListener('pointerdown', this.captureListener, { capture: true });
   }
 
   disableAnnotateMode(): void {
-    if (!this.captureListener) return;
-    document.removeEventListener('pointerdown', this.captureListener, { capture: true });
-    this.captureListener = null;
+    if (this.captureListener) {
+      document.removeEventListener('pointerdown', this.captureListener, { capture: true });
+      this.captureListener = null;
+    }
+    if (this.moveListener) {
+      document.removeEventListener('pointermove', this.moveListener);
+      this.moveListener = null;
+    }
+    if (this.upListener) {
+      document.removeEventListener('pointerup', this.upListener);
+      this.upListener = null;
+    }
+    if (this.selectionOverlay) {
+      this.selectionOverlay.remove();
+      this.selectionOverlay = null;
+    }
     document.documentElement.style.cursor = this.savedCursor;
     this.savedCursor = '';
   }
@@ -91,9 +164,8 @@ export class AgentationApp {
     }
     if (isFrozen()) unfreeze();
     this.markerRegistry.destroy();
-    this.toolbar.destroy();
+    this.toolbox.destroy();
     this.dialog.destroy();
-    this.annotationList.destroy();
     this.eventBus.removeAllListeners();
     this.restoreNavigationPatches();
   }
@@ -133,7 +205,6 @@ export class AgentationApp {
 
     this.eventBus.on('list-toggle', (open) => {
       this.listVisible = open;
-      this.annotationList.toggle(open);
     });
 
     this.eventBus.on('freeze-toggle', (frozen) => {
@@ -148,6 +219,7 @@ export class AgentationApp {
       const settings = await loadSettings();
       const md = generateMarkdown(this.annotations, settings.detailLevel);
       const ok = await copyToClipboard(md);
+      if (ok) this.eventBus.emit('copy-success');
       console.debug('[Agentation] copy', ok ? 'success' : 'failed');
     });
 

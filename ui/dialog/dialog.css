@@ -4,13 +4,13 @@
   max-width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--agt-light-bg);
-  border: 1px solid var(--agt-light-border);
-  border-radius: var(--agt-radius-lg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  background: var(--agt-bg);
+  border: 1px solid var(--agt-border);
+  border-radius: var(--agt-radius-xl);
+  box-shadow: var(--agt-shadow-lg);
   font-family: var(--agt-font-family);
   font-size: var(--agt-font-size-md);
-  color: var(--agt-light-text);
+  color: var(--agt-text);
 }
 
 .agt-dialog-header {
@@ -18,7 +18,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--agt-space-md) 14px var(--agt-space-sm);
-  border-bottom: 1px solid var(--agt-light-divider);
+  border-bottom: 1px solid var(--agt-divider);
   gap: var(--agt-space-sm);
 }
 
@@ -37,26 +37,27 @@
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  color: var(--agt-light-text-secondary);
+  color: var(--agt-text-secondary);
   padding: 2px 4px;
   border-radius: var(--agt-radius-sm);
   flex-shrink: 0;
 }
 
 .agt-dialog-close:hover {
-  background: var(--agt-light-hover);
+  background: var(--agt-hover);
+  color: var(--agt-text);
 }
 
 .agt-dialog-element-info {
   padding: var(--agt-space-sm) 14px;
   font-size: var(--agt-font-size-xs);
-  color: var(--agt-light-text-secondary);
+  color: var(--agt-text-secondary);
 }
 
 .agt-dialog-path {
   font-family: monospace;
   font-size: var(--agt-font-size-xs);
-  color: var(--agt-light-text-muted);
+  color: var(--agt-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -70,18 +71,20 @@
   width: 100%;
   min-height: 80px;
   resize: vertical;
-  border: 1px solid var(--agt-light-input-border);
-  border-radius: var(--agt-radius-sm);
+  border: 1px solid var(--agt-border);
+  border-radius: var(--agt-radius-md);
   padding: var(--agt-space-sm);
   font-size: var(--agt-font-size-md);
   font-family: inherit;
   box-sizing: border-box;
   outline: none;
+  background: var(--agt-surface);
+  color: var(--agt-text);
 }
 
 .agt-dialog-textarea:focus {
-  border-color: var(--agt-light-accent);
-  box-shadow: var(--agt-light-accent-ring);
+  border-color: var(--agt-accent);
+  box-shadow: 0 0 0 2px var(--agt-accent-muted);
 }
 
 .agt-dialog-footer {
@@ -89,46 +92,50 @@
   gap: var(--agt-space-sm);
   justify-content: flex-end;
   padding: var(--agt-space-sm) 14px var(--agt-space-md);
-  border-top: 1px solid var(--agt-light-divider);
+  border-top: 1px solid var(--agt-divider);
 }
 
 .agt-dialog-btn {
   padding: 6px 14px;
-  border-radius: var(--agt-radius-sm);
+  border-radius: var(--agt-radius-md);
   border: 1px solid transparent;
   font-size: var(--agt-font-size-md);
   font-family: inherit;
   cursor: pointer;
   font-weight: 500;
+  transition: background 120ms ease, border-color 120ms ease;
 }
 
 .agt-dialog-btn--submit {
-  background: var(--agt-light-accent);
-  color: var(--agt-light-text-on-accent);
-  border-color: var(--agt-light-accent);
+  background: var(--agt-accent);
+  color: var(--agt-text-on-accent);
+  border-color: var(--agt-accent);
 }
 
 .agt-dialog-btn--submit:hover {
-  background: var(--agt-light-accent-hover);
+  background: var(--agt-accent-hover);
 }
 
 .agt-dialog-btn--cancel {
-  background: var(--agt-light-btn-secondary-bg);
-  color: var(--agt-light-text-tertiary);
-  border-color: var(--agt-light-input-border);
+  background: var(--agt-surface);
+  color: var(--agt-text-secondary);
+  border-color: var(--agt-border);
 }
 
 .agt-dialog-btn--cancel:hover {
-  background: var(--agt-light-btn-secondary-hover);
+  background: var(--agt-hover);
+  color: var(--agt-text);
 }
 
 .agt-dialog-btn--delete {
-  background: var(--agt-light-bg);
-  color: var(--agt-light-danger);
-  border-color: var(--agt-light-danger-border);
+  background: transparent;
+  color: var(--agt-danger);
+  border-color: var(--agt-danger);
   margin-right: auto;
+  opacity: 0.7;
 }
 
 .agt-dialog-btn--delete:hover {
-  background: var(--agt-light-danger-hover);
+  background: var(--agt-danger-hover);
+  opacity: 1;
 }

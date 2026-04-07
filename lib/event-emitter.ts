@@ -5,6 +5,7 @@ type EventMap = {
   'list-toggle': [open: boolean];
   'freeze-toggle': [frozen: boolean];
   'copy': [markdown: string];
+  'copy-success': [];
   'annotation-submit': [annotation: Annotation];
   'annotation-delete': [annotationId: string];
   'annotation-update': [annotation: Annotation];

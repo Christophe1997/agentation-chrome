@@ -1,22 +1,10 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Agentation Design Tokens
+   Unified token system — theme is selected via [data-agt-theme] attribute.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --agt-bg-primary: #1a1a2e;
-  --agt-bg-secondary: #16213e;
-  --agt-bg-surface: #0f3460;
-  --agt-accent: #e94560;
-  --agt-accent-hover: #ff6b81;
-  --agt-accent-muted: rgba(233, 69, 96, 0.15);
-  --agt-text-primary: #eaeaea;
-  --agt-text-secondary: #8892a4;
-  --agt-text-muted: #555e6e;
-  --agt-success: #2ed573;
-  --agt-warning: #ffa502;
-  --agt-error: #ff4757;
-  --agt-info: #70a1ff;
-  --agt-space-xs: 4px;
-  --agt-space-sm: 8px;
-  --agt-space-md: 12px;
-  --agt-space-lg: 16px;
-  --agt-space-xl: 24px;
+  /* ── Theme-independent tokens ── */
   --agt-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --agt-font-size-xs: 11px;
   --agt-font-size-sm: 12px;
@@ -25,53 +13,115 @@
   --agt-radius-sm: 4px;
   --agt-radius-md: 6px;
   --agt-radius-lg: 8px;
+  --agt-radius-xl: 12px;
   --agt-radius-full: 9999px;
-  --agt-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --agt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --agt-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
   --agt-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --agt-space-xs: 4px;
+  --agt-space-sm: 8px;
+  --agt-space-md: 12px;
+  --agt-space-lg: 16px;
+  --agt-space-xl: 24px;
+}
 
-  /* ── Light-theme tokens ── */
+/* ── Dark theme (default) ──────────────────────────────────────────────── */
 
-  /* Backgrounds */
-  --agt-light-bg: #fff;
-  --agt-light-hover: #f0f0f0;
-  --agt-light-btn-secondary-bg: #f5f5f5;
-  --agt-light-btn-secondary-hover: #ebebeb;
-  --agt-light-danger-hover: #fef2f2;
-  --agt-light-row-hover: #f9f9f9;
-
-  /* Borders */
-  --agt-light-border: #e0e0e0;
-  --agt-light-divider: #f0f0f0;
-  --agt-light-input-border: #ddd;
-  --agt-light-row-border: #f7f7f7;
-  --agt-light-danger-border: #fca5a5;
+[data-agt-theme="dark"],
+:root {
+  /* Backgrounds — solid, no translucency */
+  --agt-bg: #1a1a2e;
+  --agt-surface: #242445;
+  --agt-hover: #2e2e52;
+  --agt-border: rgba(255, 255, 255, 0.08);
+  --agt-divider: rgba(255, 255, 255, 0.06);
+  --agt-card-border: transparent;
 
   /* Text */
-  --agt-light-text: #1a1a1a;
-  --agt-light-text-secondary: #666;
-  --agt-light-text-muted: #888;
-  --agt-light-text-tertiary: #444;
-  --agt-light-text-on-accent: #fff;
+  --agt-text: #e4e4f0;
+  --agt-text-secondary: #8888a8;
+  --agt-text-muted: #555570;
+  --agt-text-on-accent: #fff;
 
   /* Accent */
-  --agt-light-accent: #6366f1;
-  --agt-light-accent-hover: #4f46e5;
-  --agt-light-accent-ring: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  --agt-accent: #7c6aef;
+  --agt-accent-hover: #6b58e0;
+  --agt-accent-muted: rgba(124, 106, 239, 0.15);
 
-  /* Danger */
-  --agt-light-danger: #dc2626;
+  /* Semantic */
+  --agt-success: #34d399;
+  --agt-warning: #fbbf24;
+  --agt-error: #f87171;
+  --agt-info: #60a5fa;
+  --agt-danger: #f87171;
+  --agt-danger-hover: rgba(248, 113, 113, 0.12);
 
-  /* Status (background / text pairs) */
-  --agt-light-status-pending-bg: #fef9c3;
-  --agt-light-status-pending-text: #92400e;
-  --agt-light-status-syncing-bg: #dbeafe;
-  --agt-light-status-syncing-text: #1e40af;
-  --agt-light-status-synced-bg: #dcfce7;
-  --agt-light-status-synced-text: #166534;
-  --agt-light-status-failed-bg: #fee2e2;
-  --agt-light-status-failed-text: #991b1b;
+  /* Shadows — subtle, no heavy drop shadows */
+  --agt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --agt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --agt-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* Tooltip */
+  --agt-tooltip-bg: #2a2a4a;
+  --agt-tooltip-text: #e4e4f0;
+
+  /* Status */
+  --agt-status-pending-bg: rgba(251, 191, 36, 0.12);
+  --agt-status-pending-text: #fbbf24;
+  --agt-status-syncing-bg: rgba(96, 165, 250, 0.12);
+  --agt-status-syncing-text: #60a5fa;
+  --agt-status-synced-bg: rgba(52, 211, 153, 0.12);
+  --agt-status-synced-text: #34d399;
+  --agt-status-failed-bg: rgba(248, 113, 113, 0.12);
+  --agt-status-failed-text: #f87171;
+}
+
+/* ── Light theme ────────────────────────────────────────────────────────── */
+
+[data-agt-theme="light"] {
+  /* Backgrounds */
+  --agt-bg: #ffffff;
+  --agt-surface: #f5f5f7;
+  --agt-hover: #eeedf3;
+  --agt-border: rgba(0, 0, 0, 0.08);
+  --agt-divider: rgba(0, 0, 0, 0.06);
+  --agt-card-border: transparent;
+
+  /* Text */
+  --agt-text: #1a1a2e;
+  --agt-text-secondary: #6b6b80;
+  --agt-text-muted: #9999aa;
+  --agt-text-on-accent: #fff;
+
+  /* Accent */
+  --agt-accent: #6c5ce7;
+  --agt-accent-hover: #5a4bd6;
+  --agt-accent-muted: rgba(108, 92, 231, 0.1);
+
+  /* Semantic */
+  --agt-success: #22c55e;
+  --agt-warning: #f59e0b;
+  --agt-error: #ef4444;
+  --agt-info: #3b82f6;
+  --agt-danger: #ef4444;
+  --agt-danger-hover: rgba(239, 68, 68, 0.08);
+
+  /* Shadows */
+  --agt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --agt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --agt-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Tooltip */
+  --agt-tooltip-bg: #1a1a2e;
+  --agt-tooltip-text: #fff;
+
+  /* Status */
+  --agt-status-pending-bg: #fef9c3;
+  --agt-status-pending-text: #92400e;
+  --agt-status-syncing-bg: #dbeafe;
+  --agt-status-syncing-text: #1e40af;
+  --agt-status-synced-bg: #dcfce7;
+  --agt-status-synced-text: #166534;
+  --agt-status-failed-bg: #fee2e2;
+  --agt-status-failed-text: #991b1b;
 }
 
 @media (prefers-reduced-motion: reduce) {

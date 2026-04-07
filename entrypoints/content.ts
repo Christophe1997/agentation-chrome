@@ -1,4 +1,7 @@
 import { AgentationApp } from '../lib/app';
+import '../ui/shared.css';
+import '../ui/toolbox/toolbox.css';
+import '../ui/dialog/dialog.css';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
