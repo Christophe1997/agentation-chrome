@@ -18,6 +18,7 @@ export class AgentationApp {
   private url: string;
   private annotations: Annotation[] = [];
   private tabId: number | null = null;
+  private sessionId: string | null = null;
   private captureListener: ((e: PointerEvent) => void) | null = null;
   private moveListener: ((e: PointerEvent) => void) | null = null;
   private upListener: ((e: PointerEvent) => void) | null = null;
@@ -239,15 +240,19 @@ export class AgentationApp {
       this.markerRegistry.addMarker(annotation.id, document.body, { x: annotation.x, y: annotation.y });
       // Notify list panel
       this.eventBus.emit('annotations-changed', this.annotations);
+      // Sync to server
+      this._syncAnnotation(annotation);
     });
 
     this.eventBus.on('annotation-delete', async (annotationId) => {
+      const ann = this.annotations.find((a) => a.id === annotationId);
       if (this.tabId !== null) {
         await deleteAnnotationFromStorage(this.tabId, this.url, annotationId);
       }
       this.annotations = this.annotations.filter((a) => a.id !== annotationId);
       this.markerRegistry.removeMarker(annotationId);
       this.eventBus.emit('annotations-changed', this.annotations);
+      if (ann?.serverId) this._deleteFromServer(ann.serverId);
     });
 
     this.eventBus.on('marker-click', (annotationId) => {
@@ -302,7 +307,55 @@ export class AgentationApp {
     } catch {
       this.tabId = null;
     }
+    await this._createSession();
     this._loadAnnotations();
+  }
+
+  private async _createSession(): Promise<void> {
+    try {
+      const domain = new URL(this.url).hostname;
+      const response = await browser.runtime.sendMessage({
+        type: 'CREATE_SESSION',
+        requestId: crypto.randomUUID(),
+        url: this.url,
+        domain,
+      });
+      if (response?.type === 'SESSION_CREATED') {
+        this.sessionId = response.session.id;
+      }
+    } catch {
+      // Server unavailable — annotations still save locally
+    }
+  }
+
+  private _syncAnnotation(annotation: Annotation): void {
+    if (!this.sessionId) return;
+    browser.runtime.sendMessage({
+      type: 'SYNC_ANNOTATION',
+      requestId: crypto.randomUUID(),
+      sessionId: this.sessionId,
+      annotation,
+    }).then((response) => {
+      if (response?.type === 'SYNC_SUCCESS') {
+        // Store serverId so deletes can reference it
+        const ann = this.annotations.find((a) => a.id === annotation.id);
+        if (ann) ann.serverId = response.serverId;
+        this.eventBus.emit('sync-status-changed', annotation.id, 'synced');
+      } else {
+        this.eventBus.emit('sync-status-changed', annotation.id, 'failed');
+      }
+    }).catch(() => {
+      this.eventBus.emit('sync-status-changed', annotation.id, 'failed');
+    });
+  }
+
+  private _deleteFromServer(serverId: string): void {
+    if (!this.sessionId) return;
+    browser.runtime.sendMessage({
+      type: 'DELETE_ANNOTATION',
+      requestId: crypto.randomUUID(),
+      serverId,
+    }).catch(() => {});
   }
 
   private _loadAnnotations(): void {
