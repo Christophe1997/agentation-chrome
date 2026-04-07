@@ -109,7 +109,10 @@ export class Toolbox {
 
     const settingsBtn = this.containerEl.querySelector('[aria-label="Settings"]');
     settingsBtn?.addEventListener('click', () => {
-      browser.runtime.openOptionsPage?.().catch(() => {});
+      browser.runtime.openOptionsPage().catch((err: unknown) => {
+        console.error('[agentation] openOptionsPage failed:', err);
+        window.open(browser.runtime.getURL('/options.html'), '_blank');
+      });
     });
 
     this.clearAllBtn.addEventListener('click', () => this._handleClearAll(eventBus));

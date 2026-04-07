@@ -46,7 +46,7 @@ Tests live in `lib/__tests__/`. Mock `wxt/utils/storage` with `vi.hoisted()` —
 
 ## PR/Commit Guidelines
 
-Use Conventional Commits (see `agd:conventional-commits` skill). Scope examples: `feat(storage)`, `fix(background)`, `test(event-emitter)`.
+**IMPORTANT**: load the skill `agd:commit` for commit
 
 ## Implementation Status
 

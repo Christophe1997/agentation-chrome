@@ -10,19 +10,22 @@ const MARKER_CSS = `
   z-index: 2147483646;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  background: var(--agt-accent, #e94560);
-  border: 2px solid white;
+  border-radius: 6px;
+  background: #7c6aef;
+  border: 2px solid rgba(255,255,255,0.9);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 6px rgba(124,106,239,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .agt-marker--detached {
   opacity: 0.4;
   border-style: dashed;
 }
-.agt-marker[data-status="synced"]::after { content: '✓'; color: #2ed573; font-size: 10px; }
-.agt-marker[data-status="failed"]::after { content: '●'; color: #ff4757; font-size: 10px; }
-.agt-marker[data-status="pending"]::after { content: '○'; color: #ffa502; font-size: 10px; }
+.agt-marker[data-status="synced"]::after { content: '✓'; color: #fff; font-size: 10px; font-family: system-ui, sans-serif; }
+.agt-marker[data-status="failed"]::after { content: '!'; color: #fff; font-size: 11px; font-weight: 700; font-family: system-ui, sans-serif; }
+.agt-marker[data-status="pending"]::after { content: '·'; color: rgba(255,255,255,0.8); font-size: 16px; font-family: system-ui, sans-serif; }
 `;
 
 interface MarkerEntry {
