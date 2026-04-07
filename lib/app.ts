@@ -246,6 +246,7 @@ export class AgentationApp {
         await deleteAnnotationFromStorage(this.tabId, this.url, annotationId);
       }
       this.annotations = this.annotations.filter((a) => a.id !== annotationId);
+      this.markerRegistry.removeMarker(annotationId);
       this.eventBus.emit('annotations-changed', this.annotations);
     });
 

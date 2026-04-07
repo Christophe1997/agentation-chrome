@@ -1,6 +1,7 @@
 import type { EventEmitter } from '../../lib/event-emitter';
 import type { ElementInfo } from '../../lib/element-identification';
 import type { Annotation } from '../../lib/types';
+import { detectTheme, watchBodyStyle, type Theme } from '../../lib/theme-detector';
 
 function uuid(): string {
   return crypto.randomUUID();
@@ -13,6 +14,7 @@ export class AnnotationDialog {
   private currentPosition: { x: number; y: number } | null = null;
   private currentInfo: ElementInfo | null = null;
   private currentAnnotation: Annotation | null = null;
+  private disconnectThemeWatcher: (() => void) | null = null;
 
   get isOpen(): boolean {
     return !this.container.hidden;
@@ -22,6 +24,12 @@ export class AnnotationDialog {
     this.eventBus = eventBus;
     this.container = this._buildDOM(parent);
     this._attachListeners();
+
+    // ── Adaptive theme ──
+    this._applyTheme(detectTheme());
+    this.disconnectThemeWatcher = watchBodyStyle(() => {
+      this._applyTheme(detectTheme());
+    });
   }
 
   open(
@@ -73,6 +81,7 @@ export class AnnotationDialog {
   }
 
   destroy(): void {
+    if (this.disconnectThemeWatcher) this.disconnectThemeWatcher();
     this.container.remove();
   }
 
@@ -183,6 +192,10 @@ export class AnnotationDialog {
     if (!this.currentAnnotation) return;
     this.eventBus.emit('annotation-delete', this.currentAnnotation.id);
     this.close();
+  }
+
+  private _applyTheme(theme: Theme): void {
+    this.container.setAttribute('data-agt-theme', theme);
   }
 
   private _positionDialog(position: { x: number; y: number }): void {

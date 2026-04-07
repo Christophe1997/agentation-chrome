@@ -56,6 +56,30 @@ describe('MarkerRegistry', () => {
     expect(document.querySelectorAll('[data-agt-marker]').length).toBe(0);
   });
 
+  it('removeMarker removes a single marker element from DOM', () => {
+    registry.addMarker('ann-1', target, { x: 0, y: 0 });
+    registry.addMarker('ann-2', target, { x: 10, y: 10 });
+    registry.removeMarker('ann-1');
+    expect(document.querySelector('[data-agt-marker="ann-1"]')).toBeNull();
+    expect(document.querySelector('[data-agt-marker="ann-2"]')).not.toBeNull();
+  });
+
+  it('removeMarker with unknown id does not throw', () => {
+    expect(() => registry.removeMarker('nonexistent')).not.toThrow();
+  });
+
+  it('removeMarker does not unobserve document.body (shared element)', () => {
+    registry.addMarker('ann-1', document.body, { x: 0, y: 0 });
+    // The internal ResizeObserver for document.body is created in addMarker.
+    // removeMarker should skip unobserve for document.body to avoid breaking
+    // position tracking for other markers that share it.
+    const markerBefore = document.querySelector('[data-agt-marker="ann-1"]');
+    expect(markerBefore).not.toBeNull();
+    registry.removeMarker('ann-1');
+    const markerAfter = document.querySelector('[data-agt-marker="ann-1"]');
+    expect(markerAfter).toBeNull();
+  });
+
   it('injects a style element into document.head', () => {
     expect(document.getElementById('agt-marker-styles')).not.toBeNull();
   });

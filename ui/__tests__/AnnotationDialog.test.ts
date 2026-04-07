@@ -50,6 +50,12 @@ describe('AnnotationDialog', () => {
     expect(env.dialog).toBeDefined();
   });
 
+  it('dialog has data-agt-theme attribute set after construction', () => {
+    const dialogEl = env.parent.querySelector('[role="dialog"]') as HTMLElement;
+    const theme = dialogEl.getAttribute('data-agt-theme');
+    expect(['dark', 'light']).toContain(theme);
+  });
+
   it('dialog is hidden by default', () => {
     const { parent } = env;
     const dialogEl = parent.querySelector('[role="dialog"]') as HTMLElement;

@@ -32,13 +32,13 @@ const STATUS_LABELS: Record<AnnotationSyncStatus, string> = {
 
 export class Toolbox {
   private containerEl: HTMLElement;
-  private listSectionEl: HTMLElement;
-  private listItemsEl: HTMLElement;
-  private annotateBtn: HTMLButtonElement;
-  private listBtn: HTMLButtonElement;
-  private freezeBtn: HTMLButtonElement;
-  private copyBtn: HTMLButtonElement;
-  private clearAllBtn: HTMLButtonElement;
+  private listSectionEl!: HTMLElement;
+  private listItemsEl!: HTMLElement;
+  private annotateBtn!: HTMLButtonElement;
+  private listBtn!: HTMLButtonElement;
+  private freezeBtn!: HTMLButtonElement;
+  private copyBtn!: HTMLButtonElement;
+  private clearAllBtn!: HTMLButtonElement;
 
   private annotateMode = false;
   private listOpen = false;
@@ -54,13 +54,33 @@ export class Toolbox {
     this.containerEl = this._buildDOM(parent);
 
     // Grab references
-    this.annotateBtn = this.containerEl.querySelector('[aria-label="Annotate"]') as HTMLButtonElement;
-    this.listBtn = this.containerEl.querySelector('[aria-label="List Annotations"]') as HTMLButtonElement;
-    this.freezeBtn = this.containerEl.querySelector('[aria-label="Freeze Page"]') as HTMLButtonElement;
-    this.copyBtn = this.containerEl.querySelector('[aria-label="Copy Markdown"]') as HTMLButtonElement;
-    this.clearAllBtn = this.containerEl.querySelector('[data-action="clear-all"]') as HTMLButtonElement;
-    this.listSectionEl = this.containerEl.querySelector('.agt-toolbox-list') as HTMLElement;
-    this.listItemsEl = this.containerEl.querySelector('.agt-toolbox-list-items') as HTMLElement;
+    const annotateBtn = this.containerEl.querySelector('[aria-label="Annotate"]');
+    if (!annotateBtn) { console.warn('[agentation] Annotate button not found'); return; }
+    this.annotateBtn = annotateBtn as HTMLButtonElement;
+
+    const listBtn = this.containerEl.querySelector('[aria-label="List Annotations"]');
+    if (!listBtn) { console.warn('[agentation] List Annotations button not found'); return; }
+    this.listBtn = listBtn as HTMLButtonElement;
+
+    const freezeBtn = this.containerEl.querySelector('[aria-label="Freeze Page"]');
+    if (!freezeBtn) { console.warn('[agentation] Freeze Page button not found'); return; }
+    this.freezeBtn = freezeBtn as HTMLButtonElement;
+
+    const copyBtn = this.containerEl.querySelector('[aria-label="Copy Markdown"]');
+    if (!copyBtn) { console.warn('[agentation] Copy Markdown button not found'); return; }
+    this.copyBtn = copyBtn as HTMLButtonElement;
+
+    const clearAllBtn = this.containerEl.querySelector('[data-action="clear-all"]');
+    if (!clearAllBtn) { console.warn('[agentation] Clear-all button not found'); return; }
+    this.clearAllBtn = clearAllBtn as HTMLButtonElement;
+
+    const listSectionEl = this.containerEl.querySelector('.agt-toolbox-list');
+    if (!listSectionEl) { console.warn('[agentation] List section element not found'); return; }
+    this.listSectionEl = listSectionEl as HTMLElement;
+
+    const listItemsEl = this.containerEl.querySelector('.agt-toolbox-list-items');
+    if (!listItemsEl) { console.warn('[agentation] List items element not found'); return; }
+    this.listItemsEl = listItemsEl as HTMLElement;
 
     // ── Button handlers ──
 
@@ -87,8 +107,8 @@ export class Toolbox {
       eventBus.emit('copy', '');
     });
 
-    const settingsBtn = this.containerEl.querySelector('[aria-label="Settings"]') as HTMLButtonElement;
-    settingsBtn.addEventListener('click', () => {
+    const settingsBtn = this.containerEl.querySelector('[aria-label="Settings"]');
+    settingsBtn?.addEventListener('click', () => {
       browser.runtime.openOptionsPage?.().catch(() => {});
     });
 

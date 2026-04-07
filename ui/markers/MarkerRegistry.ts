@@ -85,6 +85,22 @@ export class MarkerRegistry {
     this.observer.observe(element);
   }
 
+  removeMarker(annotationId: string): void {
+    const entry = this.markers.get(annotationId);
+    if (!entry) return;
+
+    entry.markerEl.remove();
+    this.markers.delete(annotationId);
+
+    // Only unobserve non-shared elements.
+    // All markers currently share document.body — don't unobserve it
+    // since other markers still need resize tracking.
+    if (entry.element !== document.body) {
+      this.observer.unobserve(entry.element);
+      this.elementToAnnotation.delete(entry.element);
+    }
+  }
+
   removeAll(): void {
     for (const { element, markerEl } of this.markers.values()) {
       markerEl.remove();
