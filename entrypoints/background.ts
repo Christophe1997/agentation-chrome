@@ -24,7 +24,7 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
     (msg: ContentRequest, sender, sendResponse: (r: BackgroundResponse) => void) => {
       // Only accept messages from content scripts (sender.tab present) or alarm handlers
-      if (msg.type === 'TOOLBAR_ACTIVATED' || msg.type === 'TOOLBAR_DEACTIVATED') {
+      if (msg.type === 'TOOLBAR_ACTIVATED' || msg.type === 'TOOLBAR_DEACTIVATED' || msg.type === 'OPEN_OPTIONS') {
         handleFireAndForget(msg);
         return false;
       }
@@ -126,6 +126,8 @@ export default defineBackground(() => {
     } else if (msg.type === 'TOOLBAR_DEACTIVATED') {
       activeToolbarTabs.delete(msg.tabId);
       if (activeToolbarTabs.size === 0) disconnectSSE();
+    } else if (msg.type === 'OPEN_OPTIONS') {
+      browser.runtime.openOptionsPage();
     }
   }
 

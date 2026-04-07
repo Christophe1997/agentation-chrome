@@ -11,7 +11,8 @@ export type ContentRequest =
   | { type: 'GET_SETTINGS'; requestId: string }
   | { type: 'SAVE_SETTINGS'; requestId: string; settings: ExtensionSettings }
   | { type: 'TOOLBAR_ACTIVATED'; tabId: number }
-  | { type: 'TOOLBAR_DEACTIVATED'; tabId: number };
+  | { type: 'TOOLBAR_DEACTIVATED'; tabId: number }
+  | { type: 'OPEN_OPTIONS' };
 
 // Background → Content (responses)
 export type BackgroundResponse =
