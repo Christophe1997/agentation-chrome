@@ -47,7 +47,7 @@ export default defineBackground(() => {
 
   browser.action.onClicked.addListener(async (tab) => {
     if (!tab.id) return;
-    await ensureContentScriptRegistered();
+    await ensureContentScriptRegistered(tab.id);
     await sendToggleWithRetry(tab.id);
   });
 
@@ -57,7 +57,7 @@ export default defineBackground(() => {
     if (command !== 'toggle-toolbar') return;
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
-    await ensureContentScriptRegistered();
+    await ensureContentScriptRegistered(tab.id);
     await sendToggleWithRetry(tab.id);
   });
 
@@ -382,7 +382,8 @@ export default defineBackground(() => {
 
   // --- Helpers ---
 
-  async function ensureContentScriptRegistered(): Promise<void> {
+  async function ensureContentScriptRegistered(tabId?: number): Promise<void> {
+    let alreadyRegistered = false;
     try {
       await browser.scripting.registerContentScripts([
         {
@@ -394,6 +395,20 @@ export default defineBackground(() => {
       ]);
     } catch {
       // Already registered — DOMException is expected on second call
+      alreadyRegistered = true;
+    }
+
+    // If we just registered (first click after extension reload), the script has not yet
+    // been injected into the current tab — inject it now so the toggle message lands.
+    if (!alreadyRegistered && tabId !== undefined) {
+      try {
+        await browser.scripting.executeScript({
+          target: { tabId },
+          files: ['/content-scripts/content.js'],
+        });
+      } catch {
+        // Page may not allow injection (chrome://, etc.) — ignore
+      }
     }
   }
 

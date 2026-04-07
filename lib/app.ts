@@ -20,6 +20,7 @@ export class AgentationApp {
   private tabId: number | null = null;
   private sessionId: string | null = null;
   private captureListener: ((e: PointerEvent) => void) | null = null;
+  private clickBlocker: ((e: MouseEvent) => void) | null = null;
   private hoverListener: ((e: PointerEvent) => void) | null = null;
   private moveListener: ((e: PointerEvent) => void) | null = null;
   private upListener: ((e: PointerEvent) => void) | null = null;
@@ -95,6 +96,14 @@ export class AgentationApp {
     // Pointerdown: begin drag. If user releases without moving (click), treat as hover-pick.
     this.captureListener = (e: PointerEvent) => {
       if (this.dialog.isOpen) return;
+      // composedPath() reveals the true target inside shadow DOM; if any element in the
+      // path is part of our extension, skip annotation so toolbox buttons work normally.
+      const isExtension = e.composedPath().some(
+        (el) =>
+          el instanceof HTMLElement &&
+          (el.hasAttribute('data-agt-ext') || el.hasAttribute('data-agt-marker') || el.tagName === 'AGENTATION-TOOLBAR'),
+      );
+      if (isExtension) return;
       const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
       if (!target) return;
       if (target.closest(SELECTORS.EXTENSION) || target.closest(SELECTORS.ROOT)) return;
@@ -183,12 +192,32 @@ export class AgentationApp {
       document.addEventListener('pointerup', this.upListener);
     };
     document.addEventListener('pointerdown', this.captureListener, { capture: true });
+
+    // Block native page clicks while annotate mode is active (toolbox/markers still work).
+    // Use composedPath() so clicks inside the shadow DOM (dialog, toolbox) are also checked —
+    // e.target is retargeted to the shadow host at document level and misses inner elements.
+    this.clickBlocker = (e: MouseEvent) => {
+      const path = e.composedPath();
+      const isExtension = path.some(
+        (el) =>
+          el instanceof HTMLElement &&
+          (el.hasAttribute('data-agt-ext') || el.hasAttribute('data-agt-marker') || el.tagName === 'AGENTATION-TOOLBAR'),
+      );
+      if (isExtension) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    document.addEventListener('click', this.clickBlocker, { capture: true });
   }
 
   disableAnnotateMode(): void {
     if (this.captureListener) {
       document.removeEventListener('pointerdown', this.captureListener, { capture: true });
       this.captureListener = null;
+    }
+    if (this.clickBlocker) {
+      document.removeEventListener('click', this.clickBlocker, { capture: true });
+      this.clickBlocker = null;
     }
     if (this.hoverListener) {
       document.removeEventListener('pointermove', this.hoverListener);
