@@ -30,6 +30,9 @@ export type BackgroundResponse =
 // Background → Content (push events, no requestId)
 export type BackgroundPush =
   | { type: 'TOGGLE_TOOLBAR' }
+  | { type: 'TOGGLE_ANNOTATE' }
+  | { type: 'TOGGLE_FREEZE' }
+  | { type: 'COPY_MARKDOWN' }
   | { type: 'SERVER_STATUS'; status: 'connected' | 'disconnected' | 'unknown' };
 
 export type ErrorCode =

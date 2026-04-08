@@ -62,7 +62,7 @@ npx vitest run       # single run
 ### Activate the toolbar
 
 - **Click the extension icon** in the Chrome toolbar, or
-- Press **Ctrl+Shift+A** (Mac: **Cmd+Shift+A**)
+- Set an activation shortcut at **chrome://extensions/shortcuts**
 
 The floating toolbar appears on the current page. The content script is lazy-loaded on first activation — zero overhead until then.
 
@@ -96,6 +96,14 @@ Click an existing marker to **edit** or **delete** its annotation.
 | Ctrl/Cmd+Enter | Submit annotation (in dialog) |
 | Escape | Close dialog |
 | Tab / Shift+Tab | Cycle focus in dialog |
+
+Additional shortcuts are available and user-configurable at **chrome://extensions/shortcuts**:
+
+| Command | Default | Action |
+|---------|---------|--------|
+| Toggle annotate mode | — (set your own) | Enter/exit annotation mode |
+| Toggle page freeze | — (set your own) | Pause/resume animations |
+| Copy annotations | — (set your own) | Copy annotations as markdown |
 
 ### Settings
 

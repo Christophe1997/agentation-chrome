@@ -51,14 +51,19 @@ export default defineBackground(() => {
     await sendToggleWithRetry(tab.id);
   });
 
-  // --- Keyboard command → toggle toolbar ---
+  // --- Keyboard commands ---
 
   browser.commands.onCommand.addListener(async (command) => {
-    if (command !== 'toggle-toolbar') return;
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
-    await ensureContentScriptRegistered(tab.id);
-    await sendToggleWithRetry(tab.id);
+
+    const messageType = commandToMessageType(command);
+    if (!messageType) return;
+    try {
+      await browser.tabs.sendMessage(tab.id, { type: messageType });
+    } catch {
+      // Content script not ready or on restricted page — silent no-op
+    }
   });
 
   // --- Alarms: health check + retry queue (every 30s) ---
@@ -381,6 +386,15 @@ export default defineBackground(() => {
   }
 
   // --- Helpers ---
+
+  function commandToMessageType(command: string): string | null {
+    switch (command) {
+      case 'toggle-annotate': return 'TOGGLE_ANNOTATE';
+      case 'toggle-freeze': return 'TOGGLE_FREEZE';
+      case 'copy-markdown': return 'COPY_MARKDOWN';
+      default: return null;
+    }
+  }
 
   async function ensureContentScriptRegistered(tabId?: number): Promise<void> {
     let alreadyRegistered = false;

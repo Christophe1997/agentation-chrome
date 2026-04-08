@@ -35,6 +35,22 @@ export class AgentationApp {
   private annotateActive = false;
   private listVisible = false;
 
+  get isAnnotateActive(): boolean {
+    return this.annotateActive;
+  }
+
+  toggleAnnotateMode(): void {
+    this.eventBus.emit('annotate-mode', !this.annotateActive);
+  }
+
+  toggleFreeze(): void {
+    this.eventBus.emit('freeze-toggle', !isFrozen());
+  }
+
+  copyMarkdown(): void {
+    this.eventBus.emit('copy', '');
+  }
+
   constructor(container: HTMLElement, _shadow: ShadowRoot) {
     this.eventBus = new EventEmitter();
     this.url = window.location.href;

@@ -9,6 +9,8 @@ export default defineContentScript({
   registration: 'runtime',
 
   async main(ctx) {
+    let app: AgentationApp | null = null;
+
     const ui = await createShadowRootUi(ctx, {
       name: 'agentation-toolbar',
       position: 'overlay',
@@ -17,11 +19,14 @@ export default defineContentScript({
       inheritStyles: false,
 
       onMount(container, shadow) {
-        return new AgentationApp(container, shadow);
+        const instance = new AgentationApp(container, shadow);
+        app = instance;
+        return instance;
       },
 
-      onRemove(app) {
-        app?.destroy();
+      onRemove(instance) {
+        instance?.destroy();
+        app = null;
       },
     });
 
@@ -48,6 +53,18 @@ export default defineContentScript({
           ui.mount();
           sendToggle('TOOLBAR_ACTIVATED');
         }
+        return;
+      }
+
+      // Commands that require the toolbar to be mounted
+      if (!ui.mounted || !app) return;
+
+      if (msg.type === 'TOGGLE_ANNOTATE') {
+        app.toggleAnnotateMode();
+      } else if (msg.type === 'TOGGLE_FREEZE') {
+        app.toggleFreeze();
+      } else if (msg.type === 'COPY_MARKDOWN') {
+        app.copyMarkdown();
       }
     });
 

@@ -12,9 +12,14 @@ export default defineConfig({
       extension_pages: "script-src 'self'; object-src 'self';",
     },
     commands: {
-      'toggle-toolbar': {
-        suggested_key: { default: 'Ctrl+Shift+A', mac: 'Command+Shift+A' },
-        description: 'Toggle Agentation toolbar',
+      'toggle-annotate': {
+        description: 'Toggle annotate mode',
+      },
+      'toggle-freeze': {
+        description: 'Toggle page freeze',
+      },
+      'copy-markdown': {
+        description: 'Copy annotations as markdown',
       },
     },
   },
