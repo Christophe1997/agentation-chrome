@@ -162,4 +162,4 @@ agentation-chrome/
 
 ## License
 
-Private — not for distribution.
+MIT
