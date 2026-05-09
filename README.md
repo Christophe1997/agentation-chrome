@@ -1,4 +1,6 @@
-# Agentation
+# Agentation Chrome
+
+> This project is entirely built with AI
 
 A Chrome extension that adds a floating visual feedback toolbar to any website. Annotate UI elements with text feedback, copy annotations as markdown, and sync them to an [agentation-mcp](https://github.com/anthropics/agentation-mcp) server where AI agents can consume and act on them.
 
